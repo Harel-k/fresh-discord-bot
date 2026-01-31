@@ -6,16 +6,18 @@ module.exports = {
 
   async run(interaction) {
 
+    // ✅ prevent "application did not respond"
+    await interaction.deferReply({ ephemeral: true });
+
     const messages = cache.get(interaction.channel.id);
 
     if (!messages.length) {
-      return interaction.reply({
-        content: 'No deleted messages in last 2 hours.',
-        ephemeral: true
+      return interaction.editReply({
+        content: 'No deleted messages in last 2 hours.'
       });
     }
 
-    const recent = messages.slice(-10).reverse(); // last 10 only
+    const recent = messages.slice(-10).reverse();
 
     const embed = new EmbedBuilder()
       .setColor('#ef4444')
@@ -26,9 +28,8 @@ module.exports = {
         ).join('\n\n')
       );
 
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true
+    await interaction.editReply({
+      embeds: [embed]
     });
   }
 };
