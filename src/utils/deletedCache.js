@@ -13,15 +13,14 @@ function add(message) {
     time: Date.now()
   });
 
-  // auto remove after 2 hours
   setTimeout(() => {
-    const arr = cache.get(message.channel.id) || [];
-    arr.shift();
+    const arr = cache.get(message.channel.id);
+    if (arr) arr.shift();
   }, 2 * 60 * 60 * 1000);
 }
 
 function get(channelId) {
-  return cache.get(channelId) || [];
+  return cache.get(channelId);
 }
 
 module.exports = { add, get };
