@@ -12,3 +12,5 @@ require('./handlers/commandHandler')(client);
 require('./handlers/eventHandler')(client);
 
 client.login(process.env.TOKEN);
+console.log("TOKEN EXISTS:", !!process.env.TOKEN);
+
