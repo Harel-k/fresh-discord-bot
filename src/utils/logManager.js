@@ -3,37 +3,27 @@ const path = require('path');
 
 const filePath = path.join(__dirname, '..', 'data', 'logs.json');
 
-function load() {
+function read() {
   if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, '{}');
   return JSON.parse(fs.readFileSync(filePath));
 }
 
-function save(data) {
+function write(data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
 function setChannel(guildId, channelId) {
-  const data = load();
-  if (!data[guildId]) data[guildId] = {};
-  data[guildId].channel = channelId;
-  save(data);
+  const data = read();
+  data[guildId] = { channel: channelId };
+  write(data);
 }
 
-function toggleDeleted(guildId) {
-  const data = load();
-  if (!data[guildId]) data[guildId] = {};
-  data[guildId].deleted = !data[guildId].deleted;
-  save(data);
-  return data[guildId].deleted;
-}
-
-function get(guildId) {
-  const data = load();
-  return data[guildId];
+function getChannel(guildId) {
+  const data = read();
+  return data[guildId]?.channel || null;
 }
 
 module.exports = {
   setChannel,
-  toggleDeleted,
-  get
+  getChannel
 };
