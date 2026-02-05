@@ -91,6 +91,40 @@ module.exports = {
         }
       }
     }
+    
+    // =============================
+    // ONE ROLE REACTION BUTTONS (SAFE)
+    // =============================
+    if (interaction.isButton() && interaction.customId.startsWith('orr|')) {
+    
+      await interaction.deferReply({ ephemeral: true });
+    
+      const [, clickedRole, allRolesStr] = interaction.customId.split('|');
+      const allRoles = allRolesStr.split(',');
+    
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+    
+      try {
+      
+        // remove all first
+        for (const roleId of allRoles) {
+          if (member.roles.cache.has(roleId)) {
+            await member.roles.remove(roleId);
+          }
+        }
+      
+        // add clicked
+        await member.roles.add(clickedRole);
+      
+        await interaction.editReply('✅ Switched role');
+      
+      } catch {
+        await interaction.editReply('❌ I cannot manage those roles (check hierarchy).');
+      }
+    
+      return;
+    }
+    
 
     
 

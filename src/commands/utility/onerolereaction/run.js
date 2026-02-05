@@ -15,30 +15,31 @@ module.exports = {
     const title = interaction.options.getString('title');
     const roleInput = interaction.options.getString('roles');
 
-    // extract role IDs
     const roleIds = [...roleInput.matchAll(/<@&(\d+)>/g)]
       .map(m => m[1])
       .slice(0, 5);
 
-    if (roleIds.length === 0) {
-      return interaction.editReply('❌ Please mention valid roles.');
+    if (!roleIds.length) {
+      return interaction.editReply('❌ Please mention roles like @Role.');
     }
 
     const embed = new EmbedBuilder()
       .setColor('#3b82f6')
       .setTitle(title)
-      .setDescription('You may select **only ONE** role.');
+      .setDescription('Select **one** role only.');
 
     const row = new ActionRowBuilder();
 
-    for (const roleId of roleIds) {
+    // Store all role IDs inside ONE string
+    const roleString = roleIds.join(',');
 
-      const role = interaction.guild.roles.cache.get(roleId);
+    for (const id of roleIds) {
+      const role = interaction.guild.roles.cache.get(id);
       if (!role) continue;
 
       row.addComponents(
         new ButtonBuilder()
-          .setCustomId(`orr_${role.id}_${roleIds.join('-')}`)
+          .setCustomId(`orr|${id}|${roleString}`)
           .setLabel(role.name)
           .setStyle(ButtonStyle.Primary)
       );
@@ -49,6 +50,6 @@ module.exports = {
       components: [row]
     });
 
-    await interaction.editReply('✅ One-role reaction panel created.');
+    await interaction.editReply('✅ Panel created.');
   }
 };
