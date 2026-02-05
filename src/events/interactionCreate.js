@@ -10,6 +10,49 @@ module.exports = {
 
   async execute(interaction, client) {
 
+    // =============================
+    // REACTION ROLE BUTTONS (SAFE)
+    // =============================
+    if (interaction.isButton()) {
+      if (!interaction.inGuild()) {
+        return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
+      }
+    
+      if (interaction.customId.startsWith('rr_')) {
+        const roleId = interaction.customId.slice(3);
+      
+        const role = interaction.guild.roles.cache.get(roleId);
+        if (!role) {
+          return interaction.reply({ content: '❌ Role not found.', ephemeral: true });
+        }
+      
+        // Make sure member is a GuildMember
+        const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+        if (!member) {
+          return interaction.reply({ content: '❌ Could not fetch your member info.', ephemeral: true });
+        }
+      
+        try {
+          if (member.roles.cache.has(roleId)) {
+            await member.roles.remove(roleId);
+            return interaction.reply({ content: `❌ Removed **${role.name}**`, ephemeral: true });
+          } else {
+            await member.roles.add(roleId);
+            return interaction.reply({ content: `✅ Added **${role.name}**`, ephemeral: true });
+          }
+        } catch (e) {
+          return interaction.reply({
+            content: `❌ I couldn't edit your roles. Make sure my role is ABOVE **${role.name}** and I have **Manage Roles**.`,
+            ephemeral: true
+          });
+        }
+      }
+    
+      // If it's another button, ignore it safely
+      return;
+    }
+    
+
     /* ============================= */
     /* SELECT MENUS (setperms)       */
     /* ============================= */
@@ -47,31 +90,6 @@ module.exports = {
           content: `✅ Permissions updated for **/${commandName}**`,
           components: []
         });
-      }
-    }
-
-    // =============================
-    // REACTION ROLE BUTTONS
-    // =============================
-
-    if (interaction.isButton()) {
-    
-      if (interaction.customId.startsWith('rr_')) {
-      
-        const roleId = interaction.customId.replace('rr_', '');
-      
-        const role = interaction.guild.roles.cache.get(roleId);
-        if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
-      
-        const member = interaction.member;
-      
-        if (member.roles.cache.has(roleId)) {
-          await member.roles.remove(roleId);
-          return interaction.reply({ content: `❌ Removed ${role.name}`, ephemeral: true });
-        } else {
-          await member.roles.add(roleId);
-          return interaction.reply({ content: `✅ Added ${role.name}`, ephemeral: true });
-        }
       }
     }
 
