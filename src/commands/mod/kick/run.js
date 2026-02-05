@@ -1,23 +1,22 @@
+const sendLog = require('../../../utils/sendLog');
+
 module.exports = {
   name: 'kick',
-  defaultPerms: ['KickMembers'],
 
   async run(interaction) {
 
     const member = interaction.options.getMember('user');
-    const reason = interaction.options.getString('reason') || 'No reason provided';
+    const reason = interaction.options.getString('reason') || 'No reason';
 
-    // DM user
-    try {
-      await member.user.send(
-        `👢 You were **kicked** from **${interaction.guild.name}**\n📝 Reason: ${reason}`
-      );
-    } catch {}
-
+    await member.send(`You were kicked from **${interaction.guild.name}**\nReason: ${reason}`).catch(() => {});
     await member.kick(reason);
 
-    await interaction.reply(
-      `👢 Kicked **${member.user.tag}**\n📝 Reason: ${reason}`
+    await sendLog(
+      interaction.guild,
+      '👢 User Kicked',
+      `User: ${member.user.tag}\nModerator: ${interaction.user.tag}\nReason: ${reason}`
     );
+
+    await interaction.reply(`✅ Kicked ${member.user.tag}`);
   }
 };

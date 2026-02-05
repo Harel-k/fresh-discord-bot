@@ -1,17 +1,20 @@
+const sendLog = require('../../../utils/sendLog');
+
 module.exports = {
   name: 'purge',
-  defaultPerms: ['ManageMessages'],
 
   async run(interaction) {
 
     const amount = interaction.options.getInteger('amount');
-    const reason = interaction.options.getString('reason') || 'No reason provided';
 
     await interaction.channel.bulkDelete(amount, true);
 
-    await interaction.reply({
-      content: `🧹 Deleted **${amount}** messages\n📝 Reason: ${reason}`,
-      ephemeral: true
-    });
+    await sendLog(
+      interaction.guild,
+      '🧹 Messages Purged',
+      `Moderator: ${interaction.user.tag}\nDeleted: ${amount}`
+    );
+
+    await interaction.reply({ content: `✅ Deleted ${amount} messages`, ephemeral: true });
   }
 };

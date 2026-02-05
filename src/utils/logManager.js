@@ -23,7 +23,4 @@ function getChannel(guildId) {
   return data[guildId]?.channel || null;
 }
 
-module.exports = {
-  setChannel,
-  getChannel
-};
+module.exports = { setChannel, getChannel };
