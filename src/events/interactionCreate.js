@@ -50,6 +50,31 @@ module.exports = {
       }
     }
 
+    // =============================
+    // REACTION ROLE BUTTONS
+    // =============================
+
+    if (interaction.isButton()) {
+    
+      if (interaction.customId.startsWith('rr_')) {
+      
+        const roleId = interaction.customId.replace('rr_', '');
+      
+        const role = interaction.guild.roles.cache.get(roleId);
+        if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
+      
+        const member = interaction.member;
+      
+        if (member.roles.cache.has(roleId)) {
+          await member.roles.remove(roleId);
+          return interaction.reply({ content: `❌ Removed ${role.name}`, ephemeral: true });
+        } else {
+          await member.roles.add(roleId);
+          return interaction.reply({ content: `✅ Added ${role.name}`, ephemeral: true });
+        }
+      }
+    }
+
     /* ============================= */
     /* SLASH COMMANDS                */
     /* ============================= */
