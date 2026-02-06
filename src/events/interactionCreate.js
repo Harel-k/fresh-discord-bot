@@ -53,37 +53,40 @@ module.exports = {
     }
 
     // =============================
-    // ONE ROLE REACTION BUTTONS (SAFE)
+    // ONE ROLE REACTION BUTTONS (100% SAFE)
     // =============================
     if (interaction.isButton() && interaction.customId.startsWith('orr|')) {
     
       await interaction.deferReply({ ephemeral: true });
     
-      const [, clickedRole, allRolesStr] = interaction.customId.split('|');
-      const allRoles = allRolesStr.split(',');
-    
-      const member = await interaction.guild.members.fetch(interaction.user.id);
-    
       try {
       
-        // remove all first
+        const [, clickedRole, allRolesStr] = interaction.customId.split('|');
+        const allRoles = allRolesStr.split(',');
+      
+        const member = interaction.member; // ⚡ safer than fetch
+      
+        // remove all roles
         for (const roleId of allRoles) {
           if (member.roles.cache.has(roleId)) {
             await member.roles.remove(roleId);
           }
         }
       
-        // add clicked
         await member.roles.add(clickedRole);
       
-        await interaction.editReply('✅ Switched role');
+        await interaction.editReply('✅ Role updated');
       
-      } catch {
-        await interaction.editReply('❌ I cannot manage those roles (check hierarchy).');
+      } catch (err) {
+      
+        console.error('ONE ROLE ERROR:', err);
+      
+        await interaction.editReply('❌ Could not update roles (check role hierarchy).');
       }
     
       return;
     }
+
     
 
     /* ============================= */
