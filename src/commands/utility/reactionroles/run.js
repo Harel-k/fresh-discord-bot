@@ -51,7 +51,7 @@ module.exports = {
     await sendLog(
         interaction.guild,
         'Reaction Role Panel Created',
-        `Title: ${title}\nRoles: ${roleInput}\nChannel: ${interaction.channel}\nAdministrator: ${interaction.user.tag}`
+        `Title: ${title}\nRoles: ${roleInput}\nAdministrator: ${interaction.user.tag}`
       );
 
     return interaction.editReply('✅ Reaction roles panel created in this channel.');
