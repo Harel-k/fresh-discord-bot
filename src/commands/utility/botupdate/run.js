@@ -33,9 +33,11 @@ module.exports = {
         if (!channel) continue;
 
         const msg = await channel.send({
-          content: shouldPing ? config.ping : null,
+          content: shouldPing ? config.ping : '',   // ⭐ FIX
           embeds: [embed],
-          allowedMentions: { parse: ['everyone', 'roles'] }
+          allowedMentions: shouldPing
+            ? { parse: ['everyone', 'roles'] }
+            : { parse: [] }                        // ⭐ BLOCK ALL PINGS
         });
 
         manager.setLastMessage(guildId, msg.id);
