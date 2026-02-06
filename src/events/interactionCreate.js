@@ -53,46 +53,6 @@ module.exports = {
     }
 
     // =============================
-    // ONE ROLE REACTION BUTTONS
-    // =============================
-
-    if (interaction.isButton()) {
-    
-      if (interaction.customId.startsWith('orr_')) {
-      
-        const parts = interaction.customId.split('_')[1].split('_');
-        const clickedRole = parts[0];
-        const allRoles = parts[1].split('-');
-      
-        const member = await interaction.guild.members.fetch(interaction.user.id);
-      
-        try {
-        
-          // remove ALL roles first
-          for (const roleId of allRoles) {
-            if (member.roles.cache.has(roleId)) {
-              await member.roles.remove(roleId);
-            }
-          }
-        
-          // if they didn't already have it, add clicked
-          if (!member.roles.cache.has(clickedRole)) {
-            await member.roles.add(clickedRole);
-            return interaction.reply({ content: '✅ Role updated!', ephemeral: true });
-          }
-        
-          return interaction.reply({ content: '❌ Role removed!', ephemeral: true });
-        
-        } catch {
-          return interaction.reply({
-            content: '❌ I cannot manage these roles (check role hierarchy).',
-            ephemeral: true
-          });
-        }
-      }
-    }
-    
-    // =============================
     // ONE ROLE REACTION BUTTONS (SAFE)
     // =============================
     if (interaction.isButton() && interaction.customId.startsWith('orr|')) {
@@ -124,8 +84,6 @@ module.exports = {
     
       return;
     }
-    
-
     
 
     /* ============================= */
