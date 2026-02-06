@@ -57,7 +57,7 @@ module.exports = {
         `**Title:** ${title}
         **Roles:** ${roleInput}
         **Channel:** <#${interaction.channel.id}>
-        **Created by:** ${interaction.user.mention}`
+        **Created by:** ${interaction.user.tag}`
     );
 
     await interaction.editReply('✅ Panel created.');
