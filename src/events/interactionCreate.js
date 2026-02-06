@@ -64,7 +64,33 @@ module.exports = {
       
         return;
       }
-    
+      
+      // Giveaway join
+      if (interaction.isButton() && interaction.customId === 'gw_join') {
+      
+        const manager = require('../systems/giveawayManager');
+      
+        const data = manager.getAll();
+        const giveaways = data[interaction.guild.id] || [];
+      
+        const g = giveaways.find(x => x.messageId === interaction.message.id);
+        if (!g) return;
+      
+        if (!g.entries.includes(interaction.user.id)) {
+          g.entries.push(interaction.user.id);
+        }
+      
+        require('fs').writeFileSync(
+          require('path').join(__dirname, '..', 'data', 'giveaways.json'),
+          JSON.stringify(data, null, 2)
+        );
+      
+        return interaction.reply({
+          content: '🎉 You joined!',
+          ephemeral: true
+        });
+      }
+
       return;
     }
 
