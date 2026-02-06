@@ -30,10 +30,10 @@ module.exports = {
       
         if (member.roles.cache.has(roleId)) {
           await member.roles.remove(roleId);
-          return interaction.reply({ content: `Removed <@&${role.id}>`, ephemeral: true });
+          return interaction.reply({ content: `Removed ${role.id}`, ephemeral: true });
         } else {
           await member.roles.add(roleId);
-          return interaction.reply({ content: `Added <@&${role.id}>`, ephemeral: true });
+          return interaction.reply({ content: `Added ${role.id}`, ephemeral: true });
         }
       }
     
