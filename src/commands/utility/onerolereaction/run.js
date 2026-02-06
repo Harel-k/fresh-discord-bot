@@ -4,6 +4,7 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require('discord.js');
+const sendLog = require('../../../utils/sendLog');
 
 module.exports = {
   name: 'onerolereaction',
@@ -49,6 +50,12 @@ module.exports = {
       embeds: [embed],
       components: [row]
     });
+
+    await sendLog(
+        interaction.guild,
+        'One Role Reaction Panel Created',
+        `Title: ${title}\nRoles: ${roleInput}\nChannel: ${interaction.channel}\nAdministrator: ${interaction.user.tag}`
+    );
 
     await interaction.editReply('✅ Panel created.');
   }
