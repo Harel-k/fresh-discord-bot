@@ -56,7 +56,7 @@ module.exports = {
         
           await member.roles.add(clickedRole);
         
-          await interaction.editReply('Role updated');
+          await interaction.editReply('✅ Switched role');
         
         } catch {
           await interaction.editReply('Failed (check role hierarchy)');
