@@ -25,7 +25,7 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor('#3b82f6')
+      .setColor('Random')
       .setTitle(title)
       .setDescription('Select **one** role only.');
 

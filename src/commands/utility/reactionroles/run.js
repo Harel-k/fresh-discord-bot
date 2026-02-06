@@ -23,7 +23,7 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor('#22c55e')
+      .setColor('Random')
       .setTitle(title)
       .setDescription('Click the buttons to toggle roles.');
 
