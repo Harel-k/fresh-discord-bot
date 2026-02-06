@@ -32,13 +32,12 @@ module.exports = {
         const channel = guild.channels.cache.get(config.channel);
         if (!channel) continue;
 
-        const msg = await channel.send({
-          content: shouldPing ? config.ping : '',   // ⭐ FIX
-          embeds: [embed],
-          allowedMentions: shouldPing
-            ? { parse: ['everyone', 'roles'] }
-            : { parse: [] }                        // ⭐ BLOCK ALL PINGS
-        });
+        // ✅ send ping separately ONLY when needed
+        if (shouldPing && config.ping) {
+          await channel.send(config.ping);
+        }
+
+        const msg = await channel.send({ embeds: [embed] });
 
         manager.setLastMessage(guildId, msg.id);
 
