@@ -15,12 +15,26 @@ function save(data) {
 function setConfig(guildId, channelId, ping) {
   const data = load();
 
-  data[guildId] = {
-    channel: channelId,
-    ping: ping || null
-  };
+  if (!data[guildId]) data[guildId] = {};
+
+  data[guildId].channel = channelId;
+  data[guildId].ping = ping || null;
 
   save(data);
+}
+
+function setLastMessage(guildId, messageId) {
+  const data = load();
+
+  if (!data[guildId]) data[guildId] = {};
+  data[guildId].lastMessage = messageId;
+
+  save(data);
+}
+
+function getConfig(guildId) {
+  const data = load();
+  return data[guildId];
 }
 
 function getAll() {
@@ -29,5 +43,7 @@ function getAll() {
 
 module.exports = {
   setConfig,
+  setLastMessage,
+  getConfig,
   getAll
 };

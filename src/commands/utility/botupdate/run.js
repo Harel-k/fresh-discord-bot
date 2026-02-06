@@ -1,20 +1,20 @@
 const { EmbedBuilder } = require('discord.js');
-const botUpdateManager = require('../../../systems/botUpdateManager');
+const manager = require('../../../systems/botUpdateManager');
 
 module.exports = {
   name: 'botupdate',
-  ownerOnly: true, // ONLY YOU
+  ownerOnly: true,
 
   async run(interaction, client) {
 
     await interaction.deferReply({ ephemeral: true });
 
     const message = interaction.options.getString('message');
+    const shouldPing = interaction.options.getBoolean('ping') ?? false;
 
-    const configs = botUpdateManager.getAll();
+    const configs = manager.getAll();
 
     let sent = 0;
-    let failed = 0;
 
     const embed = new EmbedBuilder()
       .setColor('#22c55e')
@@ -26,28 +26,25 @@ module.exports = {
     for (const [guildId, config] of Object.entries(configs)) {
 
       try {
-
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
 
         const channel = guild.channels.cache.get(config.channel);
         if (!channel) continue;
 
-        await channel.send({
-          content: config.ping || null,
+        const msg = await channel.send({
+          content: shouldPing ? config.ping : null,
           embeds: [embed],
           allowedMentions: { parse: ['everyone', 'roles'] }
         });
 
+        manager.setLastMessage(guildId, msg.id);
+
         sent++;
 
-      } catch {
-        failed++;
-      }
+      } catch {}
     }
 
-    return interaction.editReply(
-      `✅ Broadcast sent to **${sent}** servers\n❌ Failed: ${failed}`
-    );
+    return interaction.editReply(`✅ Sent update to ${sent} servers`);
   }
 };
