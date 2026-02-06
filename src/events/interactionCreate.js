@@ -11,81 +11,63 @@ module.exports = {
   async execute(interaction, client) {
 
     // =============================
-    // REACTION ROLE BUTTONS (SAFE)
+    // ALL BUTTONS HANDLER (FIXED)
     // =============================
     if (interaction.isButton()) {
+    
       if (!interaction.inGuild()) {
         return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
       }
     
+      const member = interaction.member;
+    
+      // ===== NORMAL REACTION ROLES =====
       if (interaction.customId.startsWith('rr_')) {
+      
         const roleId = interaction.customId.slice(3);
-      
         const role = interaction.guild.roles.cache.get(roleId);
-        if (!role) {
-          return interaction.reply({ content: '❌ Role not found.', ephemeral: true });
-        }
+        if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
       
-        // Make sure member is a GuildMember
-        const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
-        if (!member) {
-          return interaction.reply({ content: '❌ Could not fetch your member info.', ephemeral: true });
-        }
-      
-        try {
-          if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(roleId);
-            return interaction.reply({ content: `❌ Removed **${role.name}**`, ephemeral: true });
-          } else {
-            await member.roles.add(roleId);
-            return interaction.reply({ content: `✅ Added **${role.name}**`, ephemeral: true });
-          }
-        } catch (e) {
-          return interaction.reply({
-            content: `❌ I couldn't edit your roles. Make sure my role is ABOVE **${role.name}** and I have **Manage Roles**.`,
-            ephemeral: true
-          });
+        if (member.roles.cache.has(roleId)) {
+          await member.roles.remove(roleId);
+          return interaction.reply({ content: `Removed ${role.name}`, ephemeral: true });
+        } else {
+          await member.roles.add(roleId);
+          return interaction.reply({ content: `Added ${role.name}`, ephemeral: true });
         }
       }
     
-      // If it's another button, ignore it safely
+      // ===== ONE ROLE ONLY =====
+      if (interaction.customId.startsWith('orr|')) {
+      
+        await interaction.deferReply({ ephemeral: true });
+      
+        try {
+        
+          const [, clickedRole, allRolesStr] = interaction.customId.split('|');
+          const allRoles = allRolesStr.split(',');
+        
+          // remove all
+          for (const id of allRoles) {
+            if (member.roles.cache.has(id)) {
+              await member.roles.remove(id);
+            }
+          }
+        
+          await member.roles.add(clickedRole);
+        
+          await interaction.editReply('Role updated');
+        
+        } catch {
+          await interaction.editReply('Failed (check role hierarchy)');
+        }
+      
+        return;
+      }
+    
       return;
     }
 
-    // =============================
-    // ONE ROLE REACTION BUTTONS (100% SAFE)
-    // =============================
-    if (interaction.isButton() && interaction.customId.startsWith('orr|')) {
-    
-      await interaction.deferReply({ ephemeral: true });
-    
-      try {
-      
-        const [, clickedRole, allRolesStr] = interaction.customId.split('|');
-        const allRoles = allRolesStr.split(',');
-      
-        const member = interaction.member; // ⚡ safer than fetch
-      
-        // remove all roles
-        for (const roleId of allRoles) {
-          if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(roleId);
-          }
-        }
-      
-        await member.roles.add(clickedRole);
-      
-        await interaction.editReply('✅ Role updated');
-      
-      } catch (err) {
-      
-        console.error('ONE ROLE ERROR:', err);
-      
-        await interaction.editReply('❌ Could not update roles (check role hierarchy).');
-      }
-    
-      return;
-    }
 
     
 
