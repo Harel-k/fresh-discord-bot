@@ -26,6 +26,7 @@ for (const category of categories) {
 
     const register = require(registerPath);
 
+    console.log('REGISTER TYPE:', typeof register, register);
     commands.push(register.toJSON());
   }
 }
