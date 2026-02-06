@@ -54,7 +54,7 @@ module.exports = {
         `**Title:** ${title}
         **Roles:** ${roleInput}
         **Channel:** <#${interaction.channel.id}>
-        **Created by:** ${interaction.user.tag}`
+        **Created by:** ${interaction.user.mention}`
     );
 
 
