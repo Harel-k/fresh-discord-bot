@@ -17,12 +17,16 @@ module.exports = {
     const winners = interaction.options.getInteger('winners');
     const prize = interaction.options.getString('prize');
 
+    const endTime = Date.now() + minutes * 60000;
+
     const embed = new EmbedBuilder()
       .setColor('#22c55e')
       .setTitle('🎉 Giveaway')
       .setDescription(`Prize: **${prize}**
 Winners: **${winners}**
-Click to join!`);
+Ends: <t:${Math.floor(endTime/1000)}:R>
+
+Click 🎉 to join!`);
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -41,6 +45,7 @@ Click to join!`);
       channelId: interaction.channel.id,
       prize,
       winners,
+      endTime,
       entries: []
     });
 

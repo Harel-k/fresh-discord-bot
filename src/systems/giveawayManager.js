@@ -23,7 +23,14 @@ function getAll() {
   return load();
 }
 
+function remove(guildId, messageId) {
+  const data = load();
+  data[guildId] = data[guildId].filter(g => g.messageId !== messageId);
+  save(data);
+}
+
 module.exports = {
   create,
-  getAll
+  getAll,
+  remove
 };
