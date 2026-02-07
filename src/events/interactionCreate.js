@@ -10,92 +10,48 @@ module.exports = {
 
   async execute(interaction, client) {
 
-    // =============================
-    // ALL BUTTONS HANDLER (FIXED)
-    // =============================
-    if (interaction.isButton()) {
-    
-      if (!interaction.inGuild()) {
-        return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
-      }
-    
-      const member = interaction.member;
-    
-      // ===== NORMAL REACTION ROLES =====
-      if (interaction.customId.startsWith('rr_')) {
+      // =============================
+      // ALL BUTTONS HANDLER (FIXED)
+      // =============================
+      if (interaction.isButton()) {
       
-        const roleId = interaction.customId.slice(3);
-        const role = interaction.guild.roles.cache.get(roleId);
-        if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
-      
-        if (member.roles.cache.has(roleId)) {
-          await member.roles.remove(roleId);
-          return interaction.reply({ content: `Removed ${role.id}`, ephemeral: true });
-        } else {
-          await member.roles.add(roleId);
-          return interaction.reply({ content: `Added ${role.id}`, ephemeral: true });
-        }
-      }
-    
-      // ===== ONE ROLE ONLY =====
-      if (interaction.customId.startsWith('orr|')) {
-      
-        await interaction.deferReply({ ephemeral: true });
-      
-        try {
-        
-          const [, clickedRole, allRolesStr] = interaction.customId.split('|');
-          const allRoles = allRolesStr.split(',');
-        
-          // remove all
-          for (const id of allRoles) {
-            if (member.roles.cache.has(id)) {
-              await member.roles.remove(id);
-            }
-          }
-        
-          await member.roles.add(clickedRole);
-        
-          await interaction.editReply('✅ Switched role');
-        
-        } catch {
-          await interaction.editReply('Failed (check role hierarchy)');
+        if (!interaction.inGuild()) {
+          return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
         }
       
-        return;
-      }
+        const member = interaction.member;
       
-      // Giveaway join
-      if (interaction.isButton() && interaction.customId === 'gw_join') {
-      
+        if (interaction.isButton() && interaction.customId === 'gw_join') {
+
         const manager = require('../systems/giveawayManager');
-      
+        const fs = require('fs');
+        const path = require('path');
+
         const data = manager.getAll();
         const giveaways = data[interaction.guild.id] || [];
-      
+
         const g = giveaways.find(x => x.messageId === interaction.message.id);
         if (!g) return;
-      
-        if (!g.entries.includes(interaction.user.id)) {
-          g.entries.push(interaction.user.id);
+
+        if (g.entries.includes(interaction.user.id)) {
+          return interaction.reply({
+            content: '⚠️ You already joined!',
+            ephemeral: true
+          });
         }
-      
-        require('fs').writeFileSync(
-          require('path').join(__dirname, '..', 'data', 'giveaways.json'),
-          JSON.stringify(data, null, 2)
-        );
-      
-        return interaction.reply({
-          content: '🎉 You joined!',
-          ephemeral: true
-        });
-      }
 
-      return;
-    }
+    g.entries.push(interaction.user.id);
 
+    fs.writeFileSync(
+      path.join(__dirname, '..', 'data', 'giveaways.json'),
+      JSON.stringify(data, null, 2)
+    );
 
-    
+    return interaction.reply({
+      content: '🎉 Joined successfully!',
+      ephemeral: true
+    });
+  }
 
     /* ============================= */
     /* SELECT MENUS (setperms)       */
@@ -211,4 +167,5 @@ module.exports = {
       }
     }
   }
+}
 };

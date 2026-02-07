@@ -44,9 +44,6 @@ Click to join!`);
       entries: []
     });
 
-    await interaction.reply({
-      content: '✅ Giveaway started!',
-      ephemeral: true
-    });
+    await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
   }
 };
