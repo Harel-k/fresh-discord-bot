@@ -35,7 +35,9 @@ module.exports = {
 
           const roleId = interaction.customId.slice(3);
           const role = interaction.guild.roles.cache.get(roleId);
-          if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
+
+          if (!role)
+            return interaction.reply({ content: 'Role not found.', ephemeral: true });
 
           if (member.roles.cache.has(roleId)) {
             await member.roles.remove(roleId);
@@ -55,7 +57,6 @@ module.exports = {
           await interaction.deferReply({ ephemeral: true });
 
           try {
-
             const [, clickedRole, allRolesStr] = interaction.customId.split('|');
             const allRoles = allRolesStr.split(',');
 
@@ -67,20 +68,21 @@ module.exports = {
 
             await member.roles.add(clickedRole);
 
-            await interaction.editReply('✅ Role switched');
+            return interaction.editReply('✅ Role switched');
 
           } catch {
-            await interaction.editReply('❌ Failed (check role hierarchy)');
+            return interaction.editReply('❌ Failed (check role hierarchy)');
           }
-
-          return;
         }
 
         /* ===================================== */
-        /* GIVEAWAY JOIN (gw_join)               */
+        /* GIVEAWAY JOIN (gw_join) ⭐ FINAL FIX   */
         /* ===================================== */
 
         if (interaction.customId === 'gw_join') {
+
+          // 🔴 ALWAYS defer first (prevents timeout crash)
+          await interaction.deferReply({ ephemeral: true });
 
           const manager = require('../systems/giveawayManager');
 
@@ -88,19 +90,14 @@ module.exports = {
           const giveaways = data[interaction.guild.id] || [];
 
           const g = giveaways.find(x => x.messageId === interaction.message.id);
+
+          // ALWAYS reply (never silent return)
           if (!g) {
-            return interaction.reply({
-              content: '❌ Giveaway not found or already ended.',
-              ephemeral: true
-            });
+            return interaction.editReply('❌ Giveaway already ended.');
           }
 
-          // ✅ FIX: prevent infinite join spam
           if (g.entries.includes(interaction.user.id)) {
-            return interaction.reply({
-              content: '⚠️ You already joined this giveaway!',
-              ephemeral: true
-            });
+            return interaction.editReply('⚠️ You already joined!');
           }
 
           g.entries.push(interaction.user.id);
@@ -110,10 +107,7 @@ module.exports = {
             JSON.stringify(data, null, 2)
           );
 
-          return interaction.reply({
-            content: '🎉 Joined successfully!',
-            ephemeral: true
-          });
+          return interaction.editReply('🎉 Joined successfully!');
         }
 
         return;
@@ -170,7 +164,7 @@ module.exports = {
 
       try {
 
-        // ✅ ownerOnly = BOT OWNER (not server owner)
+        // BOT OWNER ONLY
         if (command.ownerOnly && interaction.user.id !== process.env.CLIENT_OWNER_ID) {
           return interaction.reply({
             content: '❌ Only the bot owner can use this command.',
@@ -226,7 +220,7 @@ module.exports = {
 
     } catch (err) {
 
-      // ✅ GLOBAL SAFETY NET (prevents "application did not respond")
+      // GLOBAL SAFETY (prevents "application did not respond")
       console.error('🔥 INTERACTION ERROR:', err);
 
       if (interaction.isRepliable() && !interaction.replied) {
