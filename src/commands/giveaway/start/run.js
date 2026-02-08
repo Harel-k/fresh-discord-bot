@@ -13,8 +13,11 @@ module.exports = {
 
   async run(interaction) {
 
-    // ✅ Always defer so you never timeout
+    // 1️⃣ ALWAYS defer immediately
     await interaction.deferReply({ ephemeral: true });
+
+    // 2️⃣ IMMEDIATELY acknowledge
+    await interaction.editReply('⏳ Creating giveaway...');
 
     try {
 
@@ -22,17 +25,14 @@ module.exports = {
       const winners = interaction.options.getInteger('winners');
       const prize = interaction.options.getString('prize');
 
-      if (!minutes || minutes <= 0) {
-        return interaction.editReply('❌ Minutes must be 1 or more.');
-      }
+      if (!minutes || minutes <= 0)
+        return interaction.editReply('❌ Minutes must be > 0');
 
-      if (!winners || winners <= 0) {
-        return interaction.editReply('❌ Winners must be 1 or more.');
-      }
+      if (!winners || winners <= 0)
+        return interaction.editReply('❌ Winners must be > 0');
 
-      if (!prize || prize.length < 1) {
-        return interaction.editReply('❌ Prize is required.');
-      }
+      if (!prize)
+        return interaction.editReply('❌ Prize is required');
 
       const endTime = Date.now() + minutes * 60000;
 
@@ -54,7 +54,6 @@ module.exports = {
           .setStyle(ButtonStyle.Success)
       );
 
-      // ✅ Send ONE message only
       const msg = await interaction.channel.send({
         embeds: [embed],
         components: [row]
@@ -69,11 +68,13 @@ module.exports = {
         entries: []
       });
 
-      return interaction.editReply('✅ Giveaway started!');
+      await interaction.editReply('✅ Giveaway created successfully!');
 
     } catch (err) {
+
       console.error('GSTART ERROR:', err);
-      return interaction.editReply('❌ Failed to start giveaway.');
+
+      await interaction.editReply('❌ Failed to create giveaway.');
     }
   }
 };
