@@ -1,7 +1,7 @@
 const {
   ActionRowBuilder,
   RoleSelectMenuBuilder,
-  Collection
+  EmbedBuilder
 } = require('discord.js');
 
 const fs = require('fs');
@@ -22,11 +22,15 @@ module.exports = {
 
       if (interaction.isButton()) {
 
-        if (!interaction.inGuild())
+        if (!interaction.inGuild()) {
           return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
+        }
 
-        // 🔥 ALWAYS defer instantly → NEVER timeout again
-        await interaction.deferReply({ ephemeral: true });
+        // ✅ Always defer immediately for ANY button
+        // (prevents Unknown interaction / timeouts)
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.deferReply({ ephemeral: true });
+        }
 
         const member = interaction.member;
 
@@ -39,8 +43,9 @@ module.exports = {
           const roleId = interaction.customId.slice(3);
           const role = interaction.guild.roles.cache.get(roleId);
 
-          if (!role)
+          if (!role) {
             return interaction.editReply('❌ Role not found.');
+          }
 
           try {
 
@@ -52,7 +57,8 @@ module.exports = {
               return interaction.editReply(`✅ Added <@&${roleId}>`);
             }
 
-          } catch {
+          } catch (err) {
+            console.error('RR ERROR:', err);
             return interaction.editReply('❌ Missing permissions or role hierarchy issue.');
           }
         }
@@ -78,13 +84,16 @@ module.exports = {
 
             return interaction.editReply('✅ Role switched');
 
-          } catch {
+          } catch (err) {
+            console.error('ORR ERROR:', err);
             return interaction.editReply('❌ Failed (check role hierarchy)');
           }
         }
 
         /* ===================================== */
-        /* GIVEAWAY JOIN (gw_join) ⭐ FINAL SAFE */
+        /* GIVEAWAY JOIN (gw_join)               */
+        /* + duplicate protection                */
+        /* + LIVE entry counter on embed         */
         /* ===================================== */
 
         if (interaction.customId === 'gw_join') {
@@ -96,23 +105,53 @@ module.exports = {
 
           const g = giveaways.find(x => x.messageId === interaction.message.id);
 
-          if (!g)
+          if (!g) {
             return interaction.editReply('❌ Giveaway already ended.');
+          }
 
-          // prevent duplicate join
-          if (g.entries.includes(interaction.user.id))
+          if (g.entries.includes(interaction.user.id)) {
             return interaction.editReply('⚠️ You already joined!');
+          }
 
           g.entries.push(interaction.user.id);
 
+          // Save using your manager
+          // (assumes your giveawayManager exposes saveAll)
           manager.saveAll(data);
+
+          // ✅ Update entries count on the giveaway embed (if it contains "**Entries:** X")
+          try {
+            const oldEmbed = interaction.message.embeds?.[0];
+            if (oldEmbed) {
+
+              const embed = EmbedBuilder.from(oldEmbed);
+
+              const oldDesc = embed.data.description || '';
+              const newDesc = oldDesc.replace(
+                /\*\*Entries:\*\*\s*\d+/,
+                `**Entries:** ${g.entries.length}`
+              );
+
+              // Only set if changed (avoid unnecessary edits)
+              if (newDesc !== oldDesc) {
+                embed.setDescription(newDesc);
+
+                await interaction.message.edit({
+                  embeds: [embed]
+                });
+              }
+            }
+          } catch (err) {
+            // Don’t fail the join if embed edit fails
+            console.error('GW EMBED UPDATE ERROR:', err);
+          }
 
           return interaction.editReply('🎉 Joined successfully!');
         }
 
+        // Unknown button → just quietly succeed
         return;
       }
-
 
       /* ===================================================== */
       /* ================= SELECT MENUS ====================== */
@@ -153,7 +192,6 @@ module.exports = {
           });
         }
       }
-
 
       /* ===================================================== */
       /* ================= SLASH COMMANDS ==================== */
@@ -214,20 +252,38 @@ module.exports = {
 
       /* ===================================== */
       /* RUN COMMAND                           */
+      /* IMPORTANT: protect against timeouts    */
       /* ===================================== */
 
-      await command.run(interaction, client);
+      try {
+        // If command forgets to reply quickly, we can still avoid timeouts
+        // by letting the command decide. We don't auto-defer here because
+        // some commands might want immediate reply, but we DO catch errors.
+        await command.run(interaction, client);
+      } catch (err) {
+        console.error('🔥 COMMAND RUN ERROR:', err);
 
+        if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: '❌ Error running command.',
+            ephemeral: true
+          });
+        } else if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {
+          await interaction.editReply('❌ Error running command.');
+        }
+      }
 
     } catch (err) {
 
       console.error('🔥 INTERACTION ERROR:', err);
 
-      if (interaction.isRepliable() && !interaction.replied) {
+      if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: '❌ Something went wrong.',
           ephemeral: true
         });
+      } else if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {
+        await interaction.editReply('❌ Something went wrong.');
       }
     }
   }

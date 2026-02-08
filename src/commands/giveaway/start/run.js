@@ -13,46 +13,67 @@ module.exports = {
 
   async run(interaction) {
 
-    const minutes = interaction.options.getInteger('minutes');
-    const winners = interaction.options.getInteger('winners');
-    const prize = interaction.options.getString('prize');
+    // ✅ Always defer so you never timeout
+    await interaction.deferReply({ ephemeral: true });
 
-    const endTime = Date.now() + minutes * 60000;
+    try {
 
-    const embed = new EmbedBuilder()
-      .setColor('#22c55e')
-      .setTitle('🎉 GIVEAWAY 🎉')
-      .setDescription(
-`**Prize:** ${prize}
-**Winners:** ${winners}
-**Ends:** <t:${Math.floor(endTime/1000)}:R>
+      const minutes = interaction.options.getInteger('minutes');
+      const winners = interaction.options.getInteger('winners');
+      const prize = interaction.options.getString('prize');
 
-**Entries:** 0
+      if (!minutes || minutes <= 0) {
+        return interaction.editReply('❌ Minutes must be 1 or more.');
+      }
 
-Click 🎉 to join!`
+      if (!winners || winners <= 0) {
+        return interaction.editReply('❌ Winners must be 1 or more.');
+      }
+
+      if (!prize || prize.length < 1) {
+        return interaction.editReply('❌ Prize is required.');
+      }
+
+      const endTime = Date.now() + minutes * 60000;
+
+      const embed = new EmbedBuilder()
+        .setColor('#22c55e')
+        .setTitle('🎉 GIVEAWAY 🎉')
+        .setDescription(
+          `**Prize:** ${prize}\n` +
+          `**Winners:** ${winners}\n` +
+          `**Ends:** <t:${Math.floor(endTime / 1000)}:R>\n\n` +
+          `**Entries:** 0\n\n` +
+          `Click 🎉 to join!`
+        );
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('gw_join')
+          .setLabel('🎉 Join')
+          .setStyle(ButtonStyle.Success)
       );
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('gw_join')
-        .setLabel('🎉 Join')
-        .setStyle(ButtonStyle.Success)
-    );
+      // ✅ Send ONE message only
+      const msg = await interaction.channel.send({
+        embeds: [embed],
+        components: [row]
+      });
 
-    // ⭐ IMPORTANT: reply instead of channel.send
-    const msg = await interaction.reply({
-      embeds: [embed],
-      components: [row],
-      fetchReply: true
-    });
+      manager.create(interaction.guild.id, {
+        messageId: msg.id,
+        channelId: interaction.channel.id,
+        prize,
+        winners,
+        endTime,
+        entries: []
+      });
 
-    manager.create(interaction.guild.id, {
-      messageId: msg.id,
-      channelId: msg.channel.id,
-      prize,
-      winners,
-      endTime,
-      entries: []
-    });
+      return interaction.editReply('✅ Giveaway started!');
+
+    } catch (err) {
+      console.error('GSTART ERROR:', err);
+      return interaction.editReply('❌ Failed to start giveaway.');
+    }
   }
 };
