@@ -13,13 +13,13 @@ module.exports = {
 
   async run(interaction) {
 
-    // 1️⃣ ALWAYS defer immediately
-    await interaction.deferReply({ ephemeral: true });
-
-    // 2️⃣ IMMEDIATELY acknowledge
-    await interaction.editReply('⏳ Creating giveaway...');
-
     try {
+
+      // ✅ reply IMMEDIATELY (no defer, no double edit)
+      await interaction.reply({
+        content: '⏳ Creating giveaway...',
+        ephemeral: true
+      });
 
       const minutes = interaction.options.getInteger('minutes');
       const winners = interaction.options.getInteger('winners');
@@ -54,6 +54,7 @@ module.exports = {
           .setStyle(ButtonStyle.Success)
       );
 
+      // heavy work AFTER reply
       const msg = await interaction.channel.send({
         embeds: [embed],
         components: [row]
@@ -68,13 +69,17 @@ module.exports = {
         entries: []
       });
 
+      // final update (safe)
       await interaction.editReply('✅ Giveaway created successfully!');
 
     } catch (err) {
 
       console.error('GSTART ERROR:', err);
 
-      await interaction.editReply('❌ Failed to create giveaway.');
+      if (!interaction.replied)
+        await interaction.reply({ content: '❌ Failed.', ephemeral: true });
+      else
+        await interaction.editReply('❌ Failed.');
     }
   }
 };
