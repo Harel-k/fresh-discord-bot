@@ -21,12 +21,16 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#22c55e')
-      .setTitle('🎉 Giveaway')
-      .setDescription(`Prize: **${prize}**
-Winners: **${winners}**
-Ends: <t:${Math.floor(endTime/1000)}:R>
+      .setTitle('🎉 GIVEAWAY 🎉')
+      .setDescription(
+`**Prize:** ${prize}
+**Winners:** ${winners}
+**Ends:** <t:${Math.floor(endTime/1000)}:R>
 
-Click 🎉 to join!`);
+**Entries:** 0
+
+Click 🎉 to join!`
+      );
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -35,20 +39,20 @@ Click 🎉 to join!`);
         .setStyle(ButtonStyle.Success)
     );
 
-    const msg = await interaction.channel.send({
+    // ⭐ IMPORTANT: reply instead of channel.send
+    const msg = await interaction.reply({
       embeds: [embed],
-      components: [row]
+      components: [row],
+      fetchReply: true
     });
 
     manager.create(interaction.guild.id, {
       messageId: msg.id,
-      channelId: interaction.channel.id,
+      channelId: msg.channel.id,
       prize,
       winners,
       endTime,
       entries: []
     });
-
-    await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
   }
 };

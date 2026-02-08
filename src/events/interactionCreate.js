@@ -1,6 +1,8 @@
 const {
   ActionRowBuilder,
-  RoleSelectMenuBuilder
+  RoleSelectMenuBuilder,
+  EmbedBuilder,
+  InteractionResponseFlags
 } = require('discord.js');
 
 const fs = require('fs');
@@ -22,7 +24,10 @@ module.exports = {
       if (interaction.isButton()) {
 
         if (!interaction.inGuild()) {
-          return interaction.reply({ content: 'This only works in servers.', ephemeral: true });
+          return interaction.reply({
+            content: 'This only works in servers.',
+            flags: InteractionResponseFlags.Ephemeral
+          });
         }
 
         const member = interaction.member;
@@ -36,15 +41,25 @@ module.exports = {
           const roleId = interaction.customId.slice(3);
           const role = interaction.guild.roles.cache.get(roleId);
 
-          if (!role)
-            return interaction.reply({ content: 'Role not found.', ephemeral: true });
+          if (!role) {
+            return interaction.reply({
+              content: 'Role not found.',
+              flags: InteractionResponseFlags.Ephemeral
+            });
+          }
 
           if (member.roles.cache.has(roleId)) {
             await member.roles.remove(roleId);
-            return interaction.reply({ content: `❌ Removed <@&${roleId}>`, ephemeral: true });
+            return interaction.reply({
+              content: `❌ Removed <@&${roleId}>`,
+              flags: InteractionResponseFlags.Ephemeral
+            });
           } else {
             await member.roles.add(roleId);
-            return interaction.reply({ content: `✅ Added <@&${roleId}>`, ephemeral: true });
+            return interaction.reply({
+              content: `✅ Added <@&${roleId}>`,
+              flags: InteractionResponseFlags.Ephemeral
+            });
           }
         }
 
@@ -54,9 +69,10 @@ module.exports = {
 
         if (interaction.customId.startsWith('orr|')) {
 
-          await interaction.deferReply({ ephemeral: true });
+          await interaction.deferReply({ flags: InteractionResponseFlags.Ephemeral });
 
           try {
+
             const [, clickedRole, allRolesStr] = interaction.customId.split('|');
             const allRoles = allRolesStr.split(',');
 
@@ -76,13 +92,12 @@ module.exports = {
         }
 
         /* ===================================== */
-        /* GIVEAWAY JOIN (gw_join) ⭐ FINAL FIX   */
+        /* GIVEAWAY JOIN (gw_join) ⭐ FINAL       */
         /* ===================================== */
 
         if (interaction.customId === 'gw_join') {
 
-          // 🔴 ALWAYS defer first (prevents timeout crash)
-          await interaction.deferReply({ ephemeral: true });
+          await interaction.deferReply({ flags: InteractionResponseFlags.Ephemeral });
 
           const manager = require('../systems/giveawayManager');
 
@@ -91,7 +106,6 @@ module.exports = {
 
           const g = giveaways.find(x => x.messageId === interaction.message.id);
 
-          // ALWAYS reply (never silent return)
           if (!g) {
             return interaction.editReply('❌ Giveaway already ended.');
           }
@@ -106,6 +120,20 @@ module.exports = {
             path.join(__dirname, '..', 'data', 'giveaways.json'),
             JSON.stringify(data, null, 2)
           );
+
+          /* ⭐ LIVE ENTRY COUNT UPDATE */
+          const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+
+          embed.setDescription(
+            embed.data.description.replace(
+              /\*\*Entries:\*\* \d+/,
+              `**Entries:** ${g.entries.length}`
+            )
+          );
+
+          await interaction.message.edit({
+            embeds: [embed]
+          });
 
           return interaction.editReply('🎉 Joined successfully!');
         }
@@ -164,19 +192,21 @@ module.exports = {
 
       try {
 
-        // BOT OWNER ONLY
+        /* OWNER ONLY */
         if (command.ownerOnly && interaction.user.id !== process.env.CLIENT_OWNER_ID) {
           return interaction.reply({
             content: '❌ Only the bot owner can use this command.',
-            ephemeral: true
+            flags: InteractionResponseFlags.Ephemeral
           });
         }
 
+        /* PERMISSIONS */
         if (interaction.user.id !== process.env.CLIENT_OWNER_ID) {
 
           const allowedRoles = permSystem.getAllowedRoles(command.name);
 
           if (allowedRoles.length > 0) {
+
             const hasRole = interaction.member.roles.cache.some(r =>
               allowedRoles.includes(r.id)
             );
@@ -184,7 +214,7 @@ module.exports = {
             if (!hasRole) {
               return interaction.reply({
                 content: '❌ You don’t have permission.',
-                ephemeral: true
+                flags: InteractionResponseFlags.Ephemeral
               });
             }
           }
@@ -198,7 +228,7 @@ module.exports = {
             if (missing.length) {
               return interaction.reply({
                 content: '❌ Missing required permissions.',
-                ephemeral: true
+                flags: InteractionResponseFlags.Ephemeral
               });
             }
           }
@@ -213,20 +243,20 @@ module.exports = {
         if (!interaction.replied) {
           await interaction.reply({
             content: '❌ Error running command.',
-            ephemeral: true
+            flags: InteractionResponseFlags.Ephemeral
           });
         }
       }
 
     } catch (err) {
 
-      // GLOBAL SAFETY (prevents "application did not respond")
+      /* GLOBAL SAFETY */
       console.error('🔥 INTERACTION ERROR:', err);
 
       if (interaction.isRepliable() && !interaction.replied) {
         await interaction.reply({
           content: '❌ Something went wrong.',
-          ephemeral: true
+          flags: InteractionResponseFlags.Ephemeral
         });
       }
     }
